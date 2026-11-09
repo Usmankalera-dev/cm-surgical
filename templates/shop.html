@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Products — CM SURGICAL{% endblock %}
+
+{% block content %}
+<section class="page-head">
+  <div class="container">
+    <h1>Products</h1>
+    <p>Browse our full range of surgical instruments</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container shop-layout">
+    <aside class="sidebar">
+      <h3>Categories</h3>
+      <a class="cat-link" data-slug="" href="/shop">All Products</a>
+      {% for c in categories %}
+      <a class="cat-link" data-slug="{{ c.slug }}" href="/shop?category={{ c.slug }}">{{ c.name }}</a>
+      {% endfor %}
+
+      <h3 style="margin-top:24px">Filters</h3>
+      <div class="filter-box">
+        <label for="fMin">Min price (₨)</label>
+        <input id="fMin" type="number" min="0" step="100" placeholder="0" inputmode="numeric">
+        <label for="fMax">Max price (₨)</label>
+        <input id="fMax" type="number" min="0" step="100" placeholder="Any" inputmode="numeric">
+        <label class="check"><input type="checkbox" id="fStock"> In stock only</label>
+        <label class="check"><input type="checkbox" id="fTop"> Top sellers only</label>
+        <button class="btn btn-ghost btn-small btn-block" id="fReset" type="button">Reset filters</button>
+      </div>
+    </aside>
+
+    <div class="shop-main">
+      <div class="shop-toolbar">
+        <span id="resultCount">Loading…</span>
+        <div class="toolbar-right">
+          <input type="search" id="shopSearch" class="shop-search" placeholder="Filter results…" value="{{ request.args.get('search','') }}">
+          <select id="sortSelect">
+            <option value="name">Name A–Z</option>
+            <option value="price_asc">Price: Low to High</option>
+            <option value="price_desc">Price: High to Low</option>
+            <option value="rating">Top rated</option>
+            <option value="popular">Most popular</option>
+          </select>
+        </div>
+      </div>
+      <div class="active-filters" id="activeFilters" hidden></div>
+      <div class="product-grid" id="productGrid"></div>
+      <p class="empty" id="emptyMsg" hidden>No products found. Try a different search or category.</p>
+    </div>
+  </div>
+</section>
+{% endblock %}

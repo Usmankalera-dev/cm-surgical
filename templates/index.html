@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% from "_macros.html" import card %}
+{% block title %}CM SURGICAL — Quality Surgical Instruments in Pakistan{% endblock %}
+
+{% block content %}
+
+<section class="hero">
+  <div class="container hero-grid">
+    <div class="hero-text">
+      <span class="badge">Since 2014 · Lahore, Pakistan</span>
+      <h1>Precision Surgical Instruments, <span>Built to Last.</span></h1>
+      <p>Manufacturers and exporters of premium surgical instruments — forceps, scissors, needle holders and more. Trusted by hospitals and distributors across Pakistan.</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="/shop">Shop Now</a>
+        <a class="btn btn-ghost" href="/about">Our Story</a>
+      </div>
+      <div class="hero-stats">
+        <div><strong>10+</strong><span>Years Exports</span></div>
+        <div><strong>500+</strong><span>Products</span></div>
+        <div><strong>100%</strong><span>Quality Checked</span></div>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="hero-card">
+        <span class="hero-card-icon">🩺</span>
+        <h3>Ear, Nose &amp; Throat</h3>
+        <p>Specula, curettes &amp; diagnostic sets in German stainless steel.</p>
+        <a href="/shop?category=ear-nose-throat" class="btn btn-small">Shop ENT →</a>
+      </div>
+      <div class="hero-card alt">
+        <span class="hero-card-icon">🩹</span>
+        <h3>Forceps &amp; Scissors</h3>
+        <p>Everyday surgical essentials with TC &amp; micro serrated edges.</p>
+        <a href="/shop?category=forceps" class="btn btn-small">Shop Forceps →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% if top_banner_ads %}
+<section class="ad-slot">
+  <div class="container">
+    {% for ad in top_banner_ads %}
+    <a class="ad-banner" href="{{ ad.link or '/shop' }}">
+      {% if ad.image %}<img src="{{ ad.image }}" alt="{{ ad.title }}">{% else %}📢 {{ ad.title }}{% endif %}
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<section class="features">
+  <div class="container features-grid">
+    <div class="feature">
+      <span class="feature-icon">🏆</span>
+      <h4>Highest Quality</h4>
+      <p>Surgical Instruments</p>
+    </div>
+    <div class="feature">
+      <span class="feature-icon">🛠️</span>
+      <h4>Surgical Instruments</h4>
+      <p>Online Store In Pakistan</p>
+    </div>
+    <div class="feature">
+      <span class="feature-icon">🚚</span>
+      <h4>Fast &amp; On Time</h4>
+      <p>Delivery Across Pakistan</p>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="section-head">
+      <h2>New Arrivals</h2>
+      <a href="/shop" class="btn btn-ghost">All Products →</a>
+    </div>
+    <div class="product-grid" id="featuredGrid">
+      {% for p in featured %}{{ card(p) }}{% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="section section-tinted">
+  <div class="container">
+    <div class="section-head">
+      <h2>Top Sellers</h2>
+      <a href="/shop" class="btn btn-ghost">View More →</a>
+    </div>
+    <div class="product-grid" id="topGrid">
+      {% for p in top_sell %}{{ card(p) }}{% endfor %}
+    </div>
+  </div>
+</section>
+
+{% if mid_banner_ads %}
+<section class="ad-slot">
+  <div class="container">
+    {% for ad in mid_banner_ads %}
+    <a class="ad-banner" href="{{ ad.link or '/shop' }}">
+      {% if ad.image %}<img src="{{ ad.image }}" alt="{{ ad.title }}">{% else %}📢 {{ ad.title }}{% endif %}
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<section class="banner-cta">
+  <div class="container banner-cta-inner">
+    <div>
+      <h2>Looking for a B2B / wholesale quote?</h2>
+      <p>We supply hospitals, distributors and exporters with competitive bulk pricing.</p>
+    </div>
+    <a class="btn btn-primary" href="/contact">Talk to Us →</a>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="section-head">
+      <h2>From Our Blog</h2>
+      <a href="/blog" class="btn btn-ghost">Read More →</a>
+    </div>
+    <div class="blog-grid">
+      <a class="blog-card" href="/blog#bandage-scissors">
+        <div class="blog-img" style="background:#0e7490">✂️</div>
+        <div class="blog-meta">March 5, 2026 · 0 Comments</div>
+        <h4>Universal Bandage Scissors for Home Use</h4>
+        <p>Safe and practical wound care support when managing minor injuries at home…</p>
+      </a>
+      <a class="blog-card" href="/blog#bed-pans">
+        <div class="blog-img" style="background:#155e75">🛏️</div>
+        <div class="blog-meta">February 12, 2026 · 0 Comments</div>
+        <h4>Bed Pans for Home Use</h4>
+        <p>Supporting safe and dignified home-based patient care under medical guidance…</p>
+      </a>
+      <a class="blog-card" href="/blog#hegar">
+        <div class="blog-img" style="background:#164e63">🩻</div>
+        <div class="blog-meta">January 3, 2026 · 0 Comments</div>
+        <h4>Hegar Dilators Home Use</h4>
+        <p>Indications, safety, and proper care of Hegar dilators…</p>
+      </a>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

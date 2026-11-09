@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Checkout — CM SURGICAL{% endblock %}
+
+{% block content %}
+<section class="page-head">
+  <div class="container">
+    <h1>Checkout</h1>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="checkout-layout">
+      <form class="card form" id="checkoutForm">
+        <h3>Delivery Details</h3>
+        <div class="form-grid">
+          <div class="field">
+            <label for="name">Full Name *</label>
+            <input id="name" required>
+          </div>
+          <div class="field">
+            <label for="phone">Phone *</label>
+            <input id="phone" required placeholder="03xx-xxxxxxx">
+          </div>
+          <div class="field">
+            <label for="email">Email</label>
+            <input id="email" type="email">
+          </div>
+          <div class="field">
+            <label for="city">City *</label>
+            <input id="city" required>
+          </div>
+          <div class="field full">
+            <label for="address">Full Address *</label>
+            <textarea id="address" rows="2" required></textarea>
+          </div>
+          <div class="field full">
+            <label for="note">Order Note (optional)</label>
+            <textarea id="note" rows="2"></textarea>
+          </div>
+        </div>
+        <p class="error-msg" id="checkoutError" hidden></p>
+        <button class="btn btn-primary btn-lg" id="placeOrderBtn" type="submit">Place Order</button>
+      </form>
+      <aside class="checkout-summary card">
+        <h3>Your Items</h3>
+        <div id="checkoutItems"></div>
+        <div class="coupon-row">
+          <input id="couponCode" placeholder="Discount code" maxlength="20" autocomplete="off">
+          <button class="btn btn-ghost btn-small" type="button" id="applyCoupon">Apply</button>
+        </div>
+        <p class="coupon-msg" id="couponMsg" hidden></p>
+        <div class="summary-total"><span>Subtotal</span><span id="checkoutSubtotal">₨ 0</span></div>
+        <div class="summary-row discount-row" id="discountRow" hidden><span>Discount</span><span id="checkoutDiscount">− ₨ 0</span></div>
+        <div class="summary-total"><span>Total</span><span id="checkoutTotal">₨ 0</span></div>
+        <div class="cod-note">💵 <strong>Cash on Delivery.</strong> Our team will call to confirm your order before delivery. Payment is made in cash / bank transfer on receipt.</div>
+      </aside>
+    </div>
+  </div>
+</section>
+{% endblock %}

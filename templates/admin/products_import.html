@@ -1,0 +1,40 @@
+{% extends "admin/base.html" %}
+{% block title %}Bulk Import Products{% endblock %}
+{% block content %}
+<div class="admin-head">
+  <h1 class="admin-title">Bulk Import Products</h1>
+  <a class="btn btn-ghost" href="/admin/products">← Back to Products</a>
+</div>
+
+{% if result %}
+<div class="card" style="margin-bottom:24px">
+  <p style="font-size:1.1rem">✅ Imported <strong>{{ result.added }}</strong> product(s).</p>
+  {% if result.errors %}
+  <p style="color:#b91c1c; margin-top:8px">The following lines were skipped:</p>
+  <ul style="margin:8px 0 0 16px; color:#b91c1c">
+    {% for e in result.errors %}<li>{{ e }}</li>{% endfor %}
+  </ul>
+  {% endif %}
+  <p style="margin-top:12px"><a href="/admin/products" class="btn btn-primary">View All Products</a></p>
+</div>
+{% endif %}
+
+<div class="card">
+  <h2 style="margin-top:0">Paste your list here</h2>
+  <p class="muted">One product per line. Fields are separated by <code>|</code>, in this order:</p>
+  <pre class="muted" style="background:var(--bg-soft); padding:10px; border-radius:6px; overflow-x:auto">Name | Category | Price | Price-To (optional) | Stock | Description (optional)
+GILLIES Heavy Wire Retractor | Retractors | 4500 | 5500 | 40 | Stainless steel, 5 inch
+DIXON Thomas Stitch Scissors | Scissors | 1200 | 1500 | 0 | Straight, sharp-sharp
+Mayo Scissors Curved | Scissors | 900 | 1100 | 25 |</pre>
+  <p class="muted">Tips:</p>
+  <ul class="muted" style="margin:4px 0 0 16px">
+    <li>If the category name doesn't exist yet, it is created automatically.</li>
+    <li>Leave Price-To blank to use a single price. Leave Stock blank for 0.</li>
+    <li>A placeholder image is auto-generated — replace it later via the product's Edit page.</li>
+  </ul>
+  <form method="post" style="margin-top:14px">
+    <textarea name="rows" rows="14" placeholder="Name | Category | Price | Price-To | Stock | Description&#10;..." style="width:100%; font-family:monospace; padding:10px; border:1px solid var(--line); border-radius:6px"></textarea>
+    <button class="btn btn-primary" type="submit" style="margin-top:10px">Import Products</button>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Contact Us — CM SURGICAL{% endblock %}
+
+{% block content %}
+<section class="page-head">
+  <div class="container">
+    <h1>Contact Us</h1>
+    <p>Questions, bulk orders, or export inquiries — we're here to help.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="contact-layout">
+      <div class="card form">
+        <h3>Send a Message</h3>
+        <form id="contactForm">
+          <div class="form-grid">
+            <div class="field">
+              <label for="cname">Name *</label>
+              <input id="cname" required>
+            </div>
+            <div class="field">
+              <label for="cemail">Email *</label>
+              <input id="cemail" type="email" required>
+            </div>
+            <div class="field full">
+              <label for="csubject">Subject *</label>
+              <input id="csubject" required>
+            </div>
+            <div class="field full">
+              <label for="cmessage">Message *</label>
+              <textarea id="cmessage" rows="5" required></textarea>
+            </div>
+          </div>
+          <p class="ok-msg" id="contactOk" hidden>✔ Message sent! We'll reply shortly.</p>
+          <p class="error-msg" id="contactError" hidden></p>
+          <button class="btn btn-primary" type="submit">Send Message</button>
+        </form>
+      </div>
+      <div>
+        <div class="card info-card">
+          <h3>Head Office</h3>
+          <p><strong>Address:</strong> 271 Model Town, P.O. Box 1015, Lahore 51310, Pakistan</p>
+          <p><strong>Phone:</strong> <a href="tel:+923402719595">0340-2719595</a></p>
+          <p><strong>Email:</strong> cmsurgical512@gmail.com</p>
+          <p><strong>Hours:</strong> Mon–Sat, 9:00 AM – 6:00 PM</p>
+        </div>
+        <div class="card info-card">
+          <h3>For International Buyers</h3>
+          <p>Visit our global export store for international pricing and shipping.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

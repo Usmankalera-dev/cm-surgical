@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Wishlist — CM SURGICAL{% endblock %}
+
+{% block content %}
+<section class="page-head">
+  <div class="container">
+    <h1>My Wishlist</h1>
+    <p>Items you saved for later. Your wishlist is stored on this device.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="toolbar-right" style="justify-content:space-between; margin-bottom:18px">
+      <span id="wishCountLabel" class="muted">Loading…</span>
+      <button class="btn btn-ghost btn-small" id="wishClear" type="button">Clear wishlist</button>
+    </div>
+    <div class="product-grid" id="wishlistGrid"></div>
+    <p class="empty" id="wishEmpty" hidden>Your wishlist is empty. Tap the ♥ on any product to save it here.</p>
+    <p style="margin-top:18px"><a class="btn btn-primary" href="/shop">Browse Products</a></p>
+  </div>
+</section>
+{% endblock %}

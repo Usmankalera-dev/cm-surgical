@@ -1,0 +1,41 @@
+{% extends "admin/base.html" %}
+{% block title %}Reviews{% endblock %}
+{% block content %}
+<div class="admin-head">
+  <h1 class="admin-title">Reviews ({{ reviews|length }})</h1>
+</div>
+<div class="card" style="overflow-x:auto">
+  <table class="tbl">
+    <tr><th>Product</th><th>Customer</th><th>Rating</th><th>Review</th><th>Date</th><th>Actions</th></tr>
+    {% for r in reviews %}
+    <tr>
+      <td>
+        <img class="tbl-img" src="{{ r.image }}" alt=""><br>
+        <strong class="small">{{ r.product_name }}</strong><br>
+        <span class="muted small">{{ r.sku }}</span>
+      </td>
+      <td>
+        <strong>{{ r.author }}</strong><br>
+        {% if r.verified %}<span class="tag tag-green">Verified</span>{% else %}<span class="tag tag-grey">Unverified</span>{% endif %}
+      </td>
+      <td style="white-space:nowrap"><span class="stars">{% for i in range(1, 6) %}<span class="{{ 'star-on' if i <= r.rating else 'star-off' }}">★</span>{% endfor %}</span><br><span class="muted small">{{ r.rating }}/5</span></td>
+      <td>
+        {% if r.title %}<strong class="small">{{ r.title }}</strong><br>{% endif %}
+        <span class="small">{{ r.body[:160] }}{% if r.body|length > 160 %}…{% endif %}</span>
+      </td>
+      <td class="muted small">{{ r.created_at }}</td>
+      <td class="actions">
+        <form method="post" action="/admin/reviews/{{ r.id }}/verify">
+          <button class="btn btn-ghost btn-small" type="submit">{{ 'Unverify' if r.verified else 'Verify' }}</button>
+        </form>
+        <form method="post" action="/admin/reviews/{{ r.id }}/delete" onsubmit="return confirm('Delete this review?')">
+          <button class="btn btn-danger btn-small" type="submit">Delete</button>
+        </form>
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="6" class="muted">No reviews yet.</td></tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}

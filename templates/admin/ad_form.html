@@ -1,0 +1,39 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ "Edit Ad" if ad else "Add Ad" }}{% endblock %}
+{% block content %}
+<h1 class="admin-title">{{ "Edit Ad" if ad else "Add Ad" }}</h1>
+<div class="card" style="max-width:680px">
+  <form method="post" enctype="multipart/form-data" class="form">
+    <div class="form-grid">
+      <div class="field">
+        <label for="title">Ad Title *</label>
+        <input id="title" name="title" required value="{{ ad.title if ad else '' }}">
+      </div>
+      <div class="field">
+        <label for="position">Position</label>
+        <select id="position" name="position">
+          <option value="top_banner" {% if ad and ad.position == 'top_banner' %}selected{% endif %}>Top banner (under hero)</option>
+          <option value="mid_banner" {% if ad and ad.position == 'mid_banner' %}selected{% endif %}>Mid page banner</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="link">Click Link (URL)</label>
+        <input id="link" name="link" value="{{ ad.link if ad else '' }}" placeholder="https://…">
+      </div>
+      <div class="field">
+        <label for="image">Banner Image (JPG/PNG/SVG)</label>
+        <input id="image" name="image" type="file" accept="image/*">
+        {% if ad and ad.image %}<p class="muted small" style="margin-top:4px">Current: {{ ad.image }}</p>{% endif %}
+      </div>
+      <div class="field full">
+        <label class="check"><input type="checkbox" name="active" {% if not ad or ad.active %}checked{% endif %}> Active (shown on site)</label>
+      </div>
+    </div>
+    <div class="admin-form-actions">
+      <button class="btn btn-primary" type="submit">Save Ad</button>
+      <a class="btn btn-ghost" href="/admin/ads">Cancel</a>
+    </div>
+  </form>
+  <p class="muted small">Tip: upload a 1200×160 image (or larger) for best results. Leave image empty to keep the current one.</p>
+</div>
+{% endblock %}

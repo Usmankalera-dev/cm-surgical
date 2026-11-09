@@ -1,0 +1,44 @@
+{% extends "admin/base.html" %}
+{% block title %}Orders{% endblock %}
+{% block content %}
+<h1 class="admin-title">Orders ({{ orders|length }})</h1>
+{% for o in orders %}
+<div class="card order-card">
+  <div class="order-head">
+    <strong>Order #{{ o.id }}</strong>
+    <span class="muted">{{ o.created_at }}</span>
+    <span class="status-pill status-{{ o.status }}">{{ o.status|title }}</span>
+    <strong>₨ {{ "{:,}".format(o.total) }}</strong>
+  </div>
+  <p>{{ o.name }} · {{ o.phone }}{% if o.email %} · {{ o.email }}{% endif %}</p>
+  <p class="muted">{{ o.address }}, {{ o.city }}</p>
+  {% if o.note %}<p class="muted">Note: {{ o.note }}</p>{% endif %}
+  <div class="mini-item-list">
+    {% for item in o.products %}
+    <div class="mini-item">
+      <img src="{{ item.image }}" alt="">
+      <div><strong>{{ item.name }}</strong><span>{{ item.quantity }} × ₨ {{ "{:,}".format(item.price) }}</span></div>
+      <strong>₨ {{ "{:,}".format(item.price * item.quantity) }}</strong>
+    </div>
+    {% endfor %}
+  </div>
+  {% if o.discount %}
+  <div class="summary-row discount-row" style="margin-top:10px">
+    <span>Subtotal ₨ {{ "{:,}".format(o.total + o.discount) }} − discount ({{ o.coupon_code }})</span>
+    <span>− ₨ {{ "{:,}".format(o.discount) }}</span>
+  </div>
+  {% endif %}
+  <form method="post" action="/admin/orders/{{ o.id }}/status" class="status-form">
+    <label for="status-{{ o.id }}">Status:</label>
+    <select id="status-{{ o.id }}" name="status">
+      {% for s in ['new', 'confirmed', 'shipped', 'delivered', 'cancelled'] %}
+      <option value="{{ s }}" {% if o.status == s %}selected{% endif %}>{{ s|title }}</option>
+      {% endfor %}
+    </select>
+    <button class="btn btn-small btn-primary" type="submit">Update</button>
+  </form>
+</div>
+{% else %}
+<p class="muted">No orders yet.</p>
+{% endfor %}
+{% endblock %}

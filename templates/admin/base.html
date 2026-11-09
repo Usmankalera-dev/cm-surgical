@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Admin{% endblock %} — CM SURGICAL</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/favicon.png') }}">
+</head>
+<body class="admin-body">
+  <div class="admin-layout">
+    <aside class="admin-side">
+      <a href="/admin/dashboard" class="admin-brand">🩺 CM SURGICAL<br><span>Admin Panel</span></a>
+      <nav class="admin-nav">
+        <a href="/admin/dashboard">Dashboard</a>
+        <a href="/admin/products">Products</a>
+        <a href="/admin/products/import">Bulk Import</a>
+        <a href="/admin/orders">Orders</a>
+        <a href="/admin/reviews">Reviews</a>
+        <a href="/admin/coupons">Coupons</a>
+        <a href="/admin/messages">Messages</a>
+        <a href="/admin/ads">Ad Slots</a>
+        <a href="/admin/password">Password</a>
+        <a href="/" target="_blank">View Site ↗</a>
+      </nav>
+      <a href="/admin/logout" class="admin-logout">Log out →</a>
+    </aside>
+    <main class="admin-main">
+      {% with msgs = get_flashed_messages(with_categories=true) %}
+        {% for cat, msg in msgs %}
+        <div class="flash flash-{{ cat }}">{{ msg }}</div>
+        {% endfor %}
+      {% endwith %}
+      {% if default_password_warning %}
+      <div class="flash flash-error" style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">
+        <span><strong>Security:</strong> the admin password is still the default
+        (<code>admin123</code>). Anyone who knows it can change your prices and read customer orders.</span>
+        <a class="btn btn-primary" href="/admin/password" style="white-space:nowrap">Change it now</a>
+      </div>
+      {% endif %}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

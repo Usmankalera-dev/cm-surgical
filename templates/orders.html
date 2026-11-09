@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}My Orders — CM SURGICAL{% endblock %}
+
+{% block content %}
+<section class="page-head">
+  <div class="container">
+    <h1>My Orders</h1>
+    <p>Enter the phone number you ordered with to see your order history.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container" style="max-width:900px">
+    <div class="card">
+      <form method="post" class="form">
+        <div class="form-grid">
+          <div class="field full">
+            <label for="phone">Phone Number *</label>
+            <input id="phone" name="phone" required placeholder="03xx-xxxxxxx" value="{{ phone }}" autocomplete="tel">
+          </div>
+        </div>
+        <button class="btn btn-primary" type="submit">View My Orders</button>
+      </form>
+    </div>
+
+    {% if error %}
+    <div class="card" style="margin-top:20px; border-color:#fecaca; background:#fef2f2">
+      <p style="color:#b91c1c">{{ error }}</p>
+    </div>
+    {% endif %}
+
+    {% for o in orders %}
+    <div class="card order-card" style="margin-top:20px">
+      <div class="order-head">
+        <h3 style="margin:0">Order #{{ o.id }}</h3>
+        <span class="status-pill status-{{ o.status }}">{{ o.status|title }}</span>
+        <strong>₨ {{ "{:,}".format(o.total) }}</strong>
+      </div>
+      <p class="muted small">Placed {{ o.created_at }} · {{ o.products | length }} item(s){% if o.coupon_code %} · Coupon {{ o.coupon_code }}{% endif %}</p>
+
+      <div class="mini-item-list">
+        {% for item in o.products %}
+        <div class="mini-item">
+          <img src="{{ item.image }}" alt="">
+          <div><strong>{{ item.name }}</strong><span>{{ item.quantity }} × ₨ {{ "{:,}".format(item.price) }}</span></div>
+          <strong>₨ {{ "{:,}".format(item.price * item.quantity) }}</strong>
+        </div>
+        {% endfor %}
+      </div>
+
+      {% if o.discount %}
+      <div class="summary-row discount-row"><span>Discount</span><span>− ₨ {{ "{:,}".format(o.discount) }}</span></div>
+      {% endif %}
+
+      <div class="track-steps">
+        {% for s in ['new', 'confirmed', 'shipped', 'delivered'] %}
+        {% set done = order_rank(o.status) >= loop.index %}
+        <div class="track-step {{ 'done' if done }} {{ 'cancelled-step' if o.status == 'cancelled' }}"><span>{{ loop.index }}</span>{{ s|title }}</div>
+        {% endfor %}
+      </div>
+      {% if o.status == 'cancelled' %}<p class="small" style="color:#b91c1c">This order was cancelled.</p>{% endif %}
+
+      <div class="confirm-actions" style="justify-content:flex-start">
+        <button class="btn btn-primary btn-small" data-reorder="{{ o.id }}" data-phone="{{ o.phone }}">↻ Buy Again</button>
+        <a class="btn btn-ghost btn-small" href="/track?order_id={{ o.id }}">Track Status</a>
+      </div>
+    </div>
+    {% endfor %}
+
+    {% if not orders and not error %}
+    <p class="muted" style="margin-top:20px">No orders found yet.</p>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

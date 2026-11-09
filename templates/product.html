@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+{% from "_macros.html" import stars, rating_line, card %}
+{% block title %}{{ product.name }} — CM SURGICAL{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container">
+    <nav class="breadcrumbs">
+      <a href="/">Home</a> ›
+      <a href="/shop">Products</a> ›
+      <a href="/shop?category={{ product.category_slug }}">{{ product.category }}</a> ›
+      <span>{{ product.name }}</span>
+    </nav>
+
+    <div class="product-detail">
+      <div class="product-detail-img">
+        <img src="{{ product.image }}" alt="{{ product.name }}">
+      </div>
+      <div class="product-detail-body">
+        <span class="product-cat">{{ product.category }} · {{ product.sku }}</span>
+        <h1>{{ product.name }}</h1>
+        <div class="detail-rating">{{ rating_line(product) }}</div>
+        <p class="product-detail-desc">{{ product.description }}</p>
+        <div class="product-detail-price">
+          {% if product.price_min == product.price_max %}
+            <strong>₨ {{ product.price_min_str }}</strong><span class="muted"> exclusive of GST</span>
+          {% else %}
+            <strong>₨ {{ product.price_min_str }} – ₨ {{ product.price_max_str }}</strong>
+            <span class="muted">(price range exclusive of GST — select variant)</span>
+          {% endif %}
+        </div>
+        <div class="stock-line">
+          {% if product.stock > 10 %}<span class="stock-ok">● In Stock ({{ product.stock }} available)</span>
+          {% elif product.stock > 0 %}<span class="stock-low">● Only {{ product.stock }} left — order soon</span>
+          {% else %}<span class="stock-out">● Out of Stock</span>{% endif %}
+        </div>
+        <div class="qty-row" id="qtyRow" {% if product.stock == 0 %}style="display:none"{% endif %}>
+          <label for="qty">Quantity</label>
+          <div class="qty-input">
+            <button type="button" data-step="-1">−</button>
+            <input id="qty" type="number" value="1" min="1" max="{{ product.stock }}" data-max="{{ product.stock }}">
+            <button type="button" data-step="1">+</button>
+          </div>
+        </div>
+        <div class="product-detail-actions">
+          <button class="btn btn-primary btn-lg" id="addToCartBtn" {% if product.stock == 0 %}disabled{% endif %}>
+            {% if product.stock == 0 %}Out of Stock{% else %}Add to Cart{% endif %}
+          </button>
+          <button class="btn btn-buy btn-lg" id="buyNowBtn" {% if product.stock == 0 %}disabled{% endif %} {% if product.stock == 0 %}style="display:none"{% endif %}>
+            ⚡ Buy Now
+          </button>
+          <button class="btn btn-ghost btn-lg" data-wish="{{ product.id }}" id="wishBtn">♥ Save</button>
+          <a class="btn btn-ghost btn-lg" href="/cart">View Cart</a>
+        </div>
+        <ul class="product-trust">
+          <li>✔ 100% stainless steel / German quality</li>
+          <li>✔ Export quality — inspected before dispatch</li>
+          <li>✔ Fast delivery across Pakistan</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section section-tinted" id="reviews">
+  <div class="container">
+    <div class="reviews-layout">
+      <div class="card">
+        <h3>Customer Reviews <span class="muted small">({{ product.review_count }})</span></h3>
+
+        <div class="rating-summary">
+          <div class="rating-big">
+            <strong>{{ product.rating or '—' }}</strong>
+            <div>{{ stars(product.rating) }}</div>
+            <span class="muted small">Based on {{ product.review_count }} review{{ '' if product.review_count == 1 else 's' }}</span>
+          </div>
+          <div class="rating-bars">
+            {% for n in [5, 4, 3, 2, 1] %}
+            <div class="rating-bar-row">
+              <span class="small">{{ n }} ★</span>
+              <span class="bar"><span class="bar-fill" style="width: {{ ((breakdown.get(n, 0) / product.review_count * 100) | round(0, 'floor') | int) if product.review_count else 0 }}%"></span></span>
+              <span class="small muted">{{ breakdown.get(n, 0) }}</span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <h3 style="margin-top:1.6rem">Write a review</h3>
+        <form class="form review-form" id="reviewForm">
+          <div class="form-grid">
+            <div class="field">
+              <label for="rAuthor">Your Name *</label>
+              <input id="rAuthor" required>
+            </div>
+            <div class="field">
+              <label for="rPhone">Order Phone (to mark as verified purchase)</label>
+              <input id="rPhone" placeholder="03xx-xxxxxxx">
+            </div>
+            <div class="field">
+              <label for="rRating">Rating *</label>
+              <select id="rRating" required>
+                <option value="">Choose…</option>
+                <option value="5">5 — Excellent</option>
+                <option value="4">4 — Very good</option>
+                <option value="3">3 — Good</option>
+                <option value="2">2 — Poor</option>
+                <option value="1">1 — Very poor</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="rTitle">Headline</label>
+              <input id="rTitle" maxlength="80" placeholder="Sum it up in a few words">
+            </div>
+            <div class="field full">
+              <label for="rBody">Your Review *</label>
+              <textarea id="rBody" rows="3" required maxlength="2000" placeholder="How is the quality, finish and packaging?"></textarea>
+            </div>
+          </div>
+          <p class="error-msg" id="reviewError" hidden></p>
+          <p class="ok-msg" id="reviewOk" hidden></p>
+          <button class="btn btn-primary" type="submit" id="reviewSubmit">Post Review</button>
+        </form>
+
+        <h3 style="margin-top:1.8rem">All Reviews</h3>
+        <div id="reviewList">
+          {% for r in reviews %}
+          <article class="review">
+            <div class="review-head">
+              <strong>{{ r.author }}</strong>
+              {{ stars(r.rating) }}
+              {% if r.verified %}<span class="verified-tag">✔ Verified purchase</span>{% endif %}
+              <span class="muted small">{{ r.created_at }}</span>
+            </div>
+            {% if r.title %}<p class="review-title">{{ r.title }}</p>{% endif %}
+            <p class="review-body">{{ r.body }}</p>
+          </article>
+          {% else %}
+          <p class="muted">No reviews yet — be the first to review this product.</p>
+          {% endfor %}
+        </div>
+      </div>
+
+      <aside class="card">
+        <h3>Why order from us?</h3>
+        <ul class="product-trust">
+          <li>✔ Instruments checked &amp; sterilised before dispatch</li>
+          <li>✔ Cash on delivery available</li>
+          <li>✔ Bulk pricing for hospitals &amp; distributors</li>
+        </ul>
+        <a class="btn btn-primary btn-block" style="margin-top:14px" href="/contact">Ask a question</a>
+      </aside>
+    </div>
+  </div>
+</section>
+
+{% if related %}
+<section class="section">
+  <div class="container">
+    <div class="section-head">
+      <h2>More from {{ product.category }}</h2>
+      <a href="/shop?category={{ product.category_slug }}" class="btn btn-ghost">View all →</a>
+    </div>
+    <div class="product-grid">{% for p in related %}{{ card(p) }}{% endfor %}</div>
+  </div>
+</section>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+  window.__PRODUCT__ = {{ product | tojson }};
+</script>
+{% endblock %}

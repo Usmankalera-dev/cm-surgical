@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Order Confirmed — CM SURGICAL{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="container">
+    <div class="card confirm-box">
+      <div class="confirm-icon">✅</div>
+      <h1>Thank You, {{ order.name }}!</h1>
+      <p>Your order <strong>#{{ order.id }}</strong> has been received. Our team will call you at
+        <strong>{{ order.phone }}</strong> shortly to confirm your order before dispatch.</p>
+
+      <div class="cod-note">💵 Payment on delivery — <strong>Cash on Delivery</strong> (excl. GST)</div>
+
+      <div class="summary-row"><span>Subtotal</span><span>₨ {{ "{:,}".format(order.total + order.discount) }}</span></div>
+      {% if order.discount %}
+      <div class="summary-row discount-row"><span>Discount ({{ order.coupon_code }})</span><span>− ₨ {{ "{:,}".format(order.discount) }}</span></div>
+      {% endif %}
+      <div class="summary-total"><span>Total</span><span>₨ {{ "{:,}".format(order.total) }}</span></div>
+
+      <div class="confirm-actions">
+        <a class="btn btn-ghost" href="/track?order_id={{ order.id }}&phone={{ order.phone }}">Track This Order</a>
+        <a class="btn btn-ghost" href="/orders">All My Orders</a>
+      </div>
+
+      <h3 style="margin-top:2rem">Order Items</h3>
+      {% for item in order.products %}
+      <div class="mini-item">
+        <img src="{{ item.image }}" alt="">
+        <div><strong>{{ item.name }}</strong> <span class="muted">{{ item.quantity }} × ₨ {{ "{:,}".format(item.price) }}</span></div>
+        <strong>₨ {{ "{:,}".format(item.price * item.quantity) }}</strong>
+      </div>
+      {% endfor %}
+
+      <div class="confirm-actions">
+        <a class="btn btn-primary" href="/shop">Continue Shopping</a>
+        <a class="btn btn-ghost" href="/">Go Home</a>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

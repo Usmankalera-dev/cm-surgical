@@ -1,0 +1,17 @@
+{% extends "admin/base.html" %}
+{% block title %}Messages{% endblock %}
+{% block content %}
+<h1 class="admin-title">Messages ({{ messages|length }})</h1>
+{% for m in messages %}
+<div class="card msg-card">
+  <div class="order-head">
+    <strong>{{ m.name }}</strong> &lt;{{ m.email }}&gt;
+    <span class="muted">{{ m.created_at }}</span>
+  </div>
+  <strong>{{ m.subject }}</strong>
+  <p>{{ m.message }}</p>
+</div>
+{% else %}
+<p class="muted">No messages yet.</p>
+{% endfor %}
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ "Edit Product" if product else "Add Product" }}{% endblock %}
+{% block content %}
+<h1 class="admin-title">{{ "Edit Product" if product else "Add Product" }}</h1>
+<div class="card" style="max-width:760px">
+  <form method="post" enctype="multipart/form-data" class="form">
+    <div class="form-grid">
+      <div class="field">
+        <label for="name">Product Name *</label>
+        <input id="name" name="name" required value="{{ product.name if product else '' }}">
+      </div>
+      <div class="field">
+        <label for="sku">SKU</label>
+        <input id="sku" name="sku" value="{{ product.sku if product else '' }}">
+      </div>
+      <div class="field">
+        <label for="category_id">Category *</label>
+        <select id="category_id" name="category_id" required>
+          {% for c in categories %}
+          <option value="{{ c.id }}" {% if product and product.category_id == c.id %}selected{% endif %}>{{ c.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label for="price_min">Price From (₨) *</label>
+        <input id="price_min" name="price_min" type="number" required value="{{ product.price_min if product else '' }}">
+      </div>
+      <div class="field">
+        <label for="price_max">Price To (₨)</label>
+        <input id="price_max" name="price_max" type="number" value="{{ product.price_max if product else '' }}">
+      </div>
+      <div class="field">
+        <label for="stock">Stock (units) *</label>
+        <input id="stock" name="stock" type="number" min="0" required value="{{ product.stock if product else '100' }}">
+      </div>
+      <div class="field">
+        <label for="image">Product Image</label>
+        <input id="image" name="image" type="file" accept="image/*">
+        {% if product %}<p class="muted small" style="margin-top:4px">Current: {{ product.image }}</p>{% endif %}
+      </div>
+      <div class="field full">
+        <label for="description">Description</label>
+        <textarea id="description" name="description" rows="3">{{ product.description if product else '' }}</textarea>
+      </div>
+      <div class="field full">
+        <label class="check"><input type="checkbox" name="featured" {% if product and product.featured %}checked{% endif %}> Show in "New Arrivals" (featured)</label>
+        <label class="check"><input type="checkbox" name="top_sell" {% if product and product.top_sell %}checked{% endif %}> Show in "Top Sellers"</label>
+      </div>
+    </div>
+    <div class="admin-form-actions">
+      <button class="btn btn-primary" type="submit">Save Product</button>
+      <a class="btn btn-ghost" href="/admin/products">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

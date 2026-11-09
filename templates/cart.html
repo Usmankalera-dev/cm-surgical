@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Cart — CM SURGICAL{% endblock %}
+
+{% block content %}
+<section class="page-head">
+  <div class="container">
+    <h1>Your Cart</h1>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="cart-layout">
+      <div class="cart-list" id="cartList"></div>
+      <aside class="cart-summary card">
+        <h3>Order Summary</h3>
+        <div class="summary-row"><span>Subtotal</span><span id="subtotal">₨ 0</span></div>
+        <div class="summary-row muted small">Shipping calculated at checkout</div>
+        <div class="summary-total"><span>Total</span><span id="cartTotal">₨ 0</span></div>
+        <button class="btn btn-primary btn-lg btn-block" id="checkoutBtn" disabled>Proceed to Checkout</button>
+        <a class="btn btn-ghost btn-block" href="/shop">Continue Shopping</a>
+      </aside>
+    </div>
+  </div>
+</section>
+{% endblock %}

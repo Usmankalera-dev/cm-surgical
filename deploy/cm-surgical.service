@@ -1,0 +1,40 @@
+[Unit]
+Description=CM SURGICAL — Flask application
+Documentation=file:/srv/cm-surgical/HANDOVER.md
+After=network.target
+Wants=network.target
+
+[Service]
+# Run as an unprivileged user. Never as root.
+User=www-data
+Group=www-data
+WorkingDirectory=/srv/cm-surgical
+
+# Settings from .env (SECRET_KEY, ADMIN_PASSWORD, APP_ENV...).
+# Keeping them here means the site refuses to start on default passwords.
+EnvironmentFile=/srv/cm-surgical/.env
+
+# Use the virtualenv's gunicorn, bound to localhost only —
+# nginx is the only thing that should talk to it.
+Environment="PATH=/srv/cm-surgical/venv/bin"
+ExecStart=/srv/cm-surgical/venv/bin/gunicorn \
+    --workers 3 \
+    --bind 127.0.0.1:8000 \
+    --timeout 60 \
+    --access-logfile - \
+    --error-logfile - \
+    app:app
+
+# Restart automatically if it crashes or the server reboots.
+Restart=always
+RestartSec=5
+
+# --- Hardening ---
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/srv/cm-surgical
+
+[Install]
+WantedBy=multi-user.target

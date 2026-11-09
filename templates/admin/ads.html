@@ -1,0 +1,33 @@
+{% extends "admin/base.html" %}
+{% block title %}Ad Slots{% endblock %}
+{% block content %}
+<div class="admin-head">
+  <h1 class="admin-title">Ad Slots ({{ ads|length }})</h1>
+  <a class="btn btn-primary" href="/admin/ads/new">+ Add Ad</a>
+</div>
+<div class="card" style="overflow-x:auto">
+  <table class="tbl">
+    <tr><th>Preview</th><th>Title</th><th>Position</th><th>Status</th><th>Actions</th></tr>
+    {% for a in ads %}
+    <tr>
+      <td style="min-width:220px">
+        {% if a.image %}<img class="ad-preview" src="{{ a.image }}" alt="">{% else %}—{% endif %}
+      </td>
+      <td>
+        <strong>{{ a.title }}</strong><br>
+        <span class="muted small">{{ a.link }}</span>
+      </td>
+      <td><span class="tag">{{ a.position }}</span></td>
+      <td>{% if a.active %}<span class="tag tag-green">Active</span>{% else %}<span class="tag tag-grey">Off</span>{% endif %}</td>
+      <td class="actions">
+        <a class="btn btn-ghost btn-small" href="/admin/ads/{{ a.id }}/edit">Edit</a>
+        <form method="post" action="/admin/ads/{{ a.id }}/delete" onsubmit="return confirm('Delete this ad?')">
+          <button class="btn btn-danger btn-small" type="submit">Delete</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+<p class="muted small" style="margin-top:10px">Positions: <strong>top_banner</strong> = below the hero, <strong>mid_banner</strong> = between product sections on the home page.</p>
+{% endblock %}

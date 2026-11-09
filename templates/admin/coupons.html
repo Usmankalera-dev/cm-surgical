@@ -1,0 +1,39 @@
+{% extends "admin/base.html" %}
+{% block title %}Coupons{% endblock %}
+{% block content %}
+<div class="admin-head">
+  <h1 class="admin-title">Discount Coupons ({{ coupons|length }})</h1>
+  <a class="btn btn-primary" href="/admin/coupons/new">+ Add Coupon</a>
+</div>
+<div class="card" style="overflow-x:auto">
+  <table class="tbl">
+    <tr><th>Code</th><th>Discount</th><th>Min Order</th><th>Cap</th><th>Used</th><th>Expires</th><th>Status</th><th>Actions</th></tr>
+    {% for c in coupons %}
+    <tr>
+      <td><strong style="font-family:ui-monospace,monospace">{{ c.code }}</strong></td>
+      <td>
+        {% if c.kind == 'percent' %}{{ c.value }}% off{% else %}₨ {{ "{:,}".format(c.value) }} off{% endif %}
+        {% if c.max_discount %}<br><span class="muted small">max ₨ {{ "{:,}".format(c.max_discount) }}</span>{% endif %}
+      </td>
+      <td>{% if c.min_order %}₨ {{ "{:,}".format(c.min_order) }}{% else %}—{% endif %}</td>
+      <td class="muted">{{ c.max_discount or '—' }}</td>
+      <td>
+        {{ c.used_count }}{% if c.usage_limit %} / {{ c.usage_limit }}{% endif %}
+        {% if c.usage_limit and c.used_count >= c.usage_limit %}<span class="tag tag-grey">Limit reached</span>{% endif %}
+      </td>
+      <td class="muted small">{% if c.expires_at %}{{ c.expires_at[:10] }}{% else %}Never{% endif %}</td>
+      <td>{% if c.active %}<span class="tag tag-green">Active</span>{% else %}<span class="tag tag-grey">Off</span>{% endif %}</td>
+      <td class="actions">
+        <a class="btn btn-ghost btn-small" href="/admin/coupons/{{ c.id }}/edit">Edit</a>
+        <form method="post" action="/admin/coupons/{{ c.id }}/delete" onsubmit="return confirm('Delete this coupon?')">
+          <button class="btn btn-danger btn-small" type="submit">Delete</button>
+        </form>
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="8" class="muted">No coupons yet.</td></tr>
+    {% endfor %}
+  </table>
+</div>
+<p class="muted small" style="margin-top:10px">Leave <strong>Usage limit</strong> at 0 for unlimited uses. Coupons are validated server-side at checkout — the discount shown in the browser is only a preview.</p>
+{% endblock %}

@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Admin Login{% endblock %}
+{% block content %}
+<section class="section">
+  <div class="container" style="max-width:440px; margin:0 auto">
+    <div class="card">
+      <h3 style="text-align:center">Admin Login</h3>
+      <p class="muted small" style="text-align:center; margin-bottom:18px">Enter your password to sign in.</p>
+      {% with msgs = get_flashed_messages(with_categories=true) %}
+        {% for cat, msg in msgs %}<div class="flash flash-{{ cat }}">{{ msg }}</div>{% endfor %}
+      {% endwith %}
+
+      {# ---- Password sign-in: the normal, always-visible way in ---- #}
+      <form method="post" class="form" autocomplete="on">
+        <input type="hidden" name="action" value="password">
+        <div class="field" style="margin-bottom:12px">
+          <label for="password">Password</label>
+          <div class="pw-wrap">
+            <input id="password" name="password" type="password" required autofocus
+                   autocomplete="current-password" placeholder="Type your admin password">
+            <button type="button" class="pw-toggle" data-pw-toggle="password" aria-label="Show password">Show</button>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-block" style="margin:0" type="submit">Sign In</button>
+      </form>
+
+      <div class="divider"><span>or</span></div>
+
+      {# ---- One-time code: secondary, and only usable once a code is requested ---- #}
+      <details class="login-alt" {% if issued_code %}open{% endif %}>
+        <summary>Sign in with a one-time code instead</summary>
+
+        <form method="post" class="form" style="margin-top:14px">
+          <input type="hidden" name="action" value="request_code">
+          <div class="field" style="margin-bottom:12px">
+            <label for="email">Admin email</label>
+            <input id="email" name="email" type="email" value="{{ session.get('login_code_email', '') }}"
+                   placeholder="admin@cmsurgical.pk" autocomplete="email">
+          </div>
+          <button class="btn btn-ghost btn-block" style="margin:0" type="submit">Email me a login code</button>
+        </form>
+
+        {% if issued_code %}
+        <div class="otp-box">
+          <p class="small muted" style="margin:0">Demo mode — no mail server configured, so here is your code:</p>
+          <strong class="otp-code">{{ issued_code }}</strong>
+          <p class="small muted" style="margin:0">
+            Valid for {{ config.LOGIN_CODE_TTL_MINUTES if config.LOGIN_CODE_TTL_MINUTES else 10 }} minutes. Set up SMTP to email it instead.
+          </p>
+        </div>
+
+        <form method="post" class="form" style="margin-top:14px">
+          <input type="hidden" name="action" value="verify_code">
+          <div class="field" style="margin-bottom:12px">
+            <label for="code">6-digit code</label>
+            <input id="code" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6"
+                   placeholder="123456" autocomplete="one-time-code">
+            <small class="muted">Six numbers only, e.g. 482913</small>
+          </div>
+          <button class="btn btn-buy btn-block" style="margin:0" type="submit">Verify &amp; Sign In</button>
+        </form>
+        {% endif %}
+      </details>
+    </div>
+  </div>
+</section>
+{% endblock %}

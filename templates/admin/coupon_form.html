@@ -1,0 +1,53 @@
+{% extends "admin/base.html" %}
+{% block title %}{% if coupon %}Edit Coupon{% else %}New Coupon{% endif %}{% endblock %}
+{% block content %}
+<div class="admin-head">
+  <h1 class="admin-title">{% if coupon %}Edit Coupon{% else %}New Coupon{% endif %}</h1>
+  <a class="btn btn-ghost" href="/admin/coupons">← Back</a>
+</div>
+<div class="card" style="max-width:640px">
+  <form method="post" class="form">
+    <div class="form-grid">
+      <div class="field">
+        <label for="code">Code *</label>
+        <input id="code" name="code" required maxlength="20" style="text-transform:uppercase"
+               placeholder="WELCOME10" value="{{ coupon.code if coupon else '' }}">
+      </div>
+      <div class="field">
+        <label for="kind">Discount Type</label>
+        <select id="kind" name="kind">
+          <option value="percent" {% if coupon and coupon.kind == 'percent' %}selected{% endif %}>Percentage off (%)</option>
+          <option value="flat" {% if coupon and coupon.kind == 'flat' %}selected{% endif %}>Flat amount off (₨)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="value">Discount Value *</label>
+        <input id="value" name="value" type="number" min="1" required value="{{ coupon.value if coupon else '' }}">
+      </div>
+      <div class="field">
+        <label for="min_order">Minimum Order (₨)</label>
+        <input id="min_order" name="min_order" type="number" min="0" value="{{ coupon.min_order if coupon else 0 }}">
+      </div>
+      <div class="field">
+        <label for="max_discount">Maximum Discount (₨, 0 = no cap)</label>
+        <input id="max_discount" name="max_discount" type="number" min="0" value="{{ coupon.max_discount if coupon else 0 }}">
+      </div>
+      <div class="field">
+        <label for="usage_limit">Usage Limit (0 = unlimited)</label>
+        <input id="usage_limit" name="usage_limit" type="number" min="0" value="{{ coupon.usage_limit if coupon else 0 }}">
+      </div>
+      <div class="field">
+        <label for="expires_at">Expires On</label>
+        <input id="expires_at" name="expires_at" type="date" value="{{ coupon.expires_at[:10] if coupon and coupon.expires_at else '' }}">
+      </div>
+      <div class="field" style="display:flex; align-items:flex-end">
+        <label class="check"><input type="checkbox" name="active" {% if not coupon or coupon.active %}checked{% endif %}> Active</label>
+      </div>
+    </div>
+    <div class="admin-form-actions">
+      <button class="btn btn-primary" type="submit">{% if coupon %}Save Changes{% else %}Create Coupon{% endif %}</button>
+      <a class="btn btn-ghost" href="/admin/coupons">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

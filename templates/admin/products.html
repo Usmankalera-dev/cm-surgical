@@ -1,0 +1,40 @@
+{% extends "admin/base.html" %}
+{% block title %}Products{% endblock %}
+{% block content %}
+<div class="admin-head">
+  <h1 class="admin-title">Products ({{ products|length }})</h1>
+  <div>
+    <a class="btn btn-ghost" href="/admin/products/import">⬆ Bulk Import</a>
+    <a class="btn btn-primary" href="/admin/products/new">+ Add Product</a>
+  </div>
+</div>
+<div class="card" style="overflow-x:auto">
+  <table class="tbl">
+    <tr><th>Image</th><th>Name</th><th>SKU</th><th>Category</th><th>Price Range</th><th>Stock</th><th>Tags</th><th>Actions</th></tr>
+    {% for p in products %}
+    <tr>
+      <td><img class="tbl-img" src="{{ p.image }}" alt=""></td>
+      <td><strong>{{ p.name }}</strong></td>
+      <td class="muted">{{ p.sku }}</td>
+      <td>{{ p.cat_name }}</td>
+      <td>₨ {{ "{:,}".format(p.price_min) }} – ₨ {{ "{:,}".format(p.price_max) }}</td>
+      <td>
+        {% if p.stock == 0 %}<span class="tag tag-grey">Out</span>
+        {% elif p.stock < 10 %}<span class="tag" style="background:#fef3c7; color:#92400e">{{ p.stock }} left</span>
+        {% else %}<span class="tag tag-green">{{ p.stock }} in stock</span>{% endif %}
+      </td>
+      <td>
+        {% if p.featured %}<span class="tag">New</span>{% endif %}
+        {% if p.top_sell %}<span class="tag tag-gold">Top</span>{% endif %}
+      </td>
+      <td class="actions">
+        <a class="btn btn-ghost btn-small" href="/admin/products/{{ p.id }}/edit">Edit</a>
+        <form method="post" action="/admin/products/{{ p.id }}/delete" onsubmit="return confirm('Delete this product?')">
+          <button class="btn btn-danger btn-small" type="submit">Delete</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}

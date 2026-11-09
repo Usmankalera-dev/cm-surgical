@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Track Your Order{% endblock %}
+
+{% block content %}
+<section class="page-head">
+  <div class="container">
+    <h1>Track Your Order</h1>
+    <p>Enter your order ID and phone number to check the status.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container" style="max-width:760px">
+    <div class="card">
+      <form method="post" class="form">
+        <div class="form-grid">
+          <div class="field">
+            <label for="order_id">Order ID *</label>
+            <input id="order_id" name="order_id" required value="{{ order.id if order else request.args.get('order_id', '') }}">
+          </div>
+          <div class="field">
+            <label for="phone">Phone Number *</label>
+            <input id="phone" name="phone" required placeholder="03xx-xxxxxxx" value="{{ phone }}">
+          </div>
+        </div>
+        <button class="btn btn-primary" type="submit">Track Order</button>
+      </form>
+    </div>
+
+    {% if error %}
+    <div class="card" style="margin-top:20px; border-color:#fecaca; background:#fef2f2">
+      <p style="color:#b91c1c">{{ error }}</p>
+    </div>
+    {% endif %}
+
+    {% if order %}
+    <div class="card" style="margin-top:20px">
+      <div class="order-head">
+        <h3 style="margin:0">Order #{{ order.id }}</h3>
+        <span class="status-pill status-{{ order.status }}">{{ order.status|title }}</span>
+      </div>
+      <p class="muted">{{ order.created_at }}</p>
+      <div class="summary-row"><span>Subtotal</span><span>₨ {{ "{:,}".format(order.total + order.discount) }}</span></div>
+      {% if order.discount %}
+      <div class="summary-row discount-row"><span>Discount ({{ order.coupon_code }})</span><span>− ₨ {{ "{:,}".format(order.discount) }}</span></div>
+      {% endif %}
+      <div class="summary-total"><span>Total (excl. GST)</span><span>₨ {{ "{:,}".format(order.total) }}</span></div>
+      <p class="muted small">Payment: Cash on Delivery · Delivery to {{ order.address }}, {{ order.city }}</p>
+
+      <h3 style="margin-top:1.2rem; font-size:1rem">Items</h3>
+      {% for item in order.products %}
+      <div class="mini-item">
+        <img src="{{ item.image }}" alt="">
+        <div><strong>{{ item.name }}</strong><span>{{ item.quantity }} × ₨ {{ "{:,}".format(item.price) }}</span></div>
+        <strong>₨ {{ "{:,}".format(item.price * item.quantity) }}</strong>
+      </div>
+      {% endfor %}
+
+      <div class="track-steps">
+        {% for s in ['new', 'confirmed', 'shipped', 'delivered'] %}
+        {% set done = order_rank(order.status) >= loop.index %}
+        <div class="track-step {{ 'done' if done else '' }}"><span>{{ loop.index }}</span>{{ s|title }}</div>
+        {% endfor %}
+      </div>
+    </div>
+    <p class="muted small" style="margin-top:12px">Have a question? Call <a href="tel:03402719595">0340-2719595</a>.</p>
+    {% endif %}
+  </div>
+</section>
+
+{% endblock %}

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0e7490"/>
+      <stop offset="1" stop-color="#164e63"/>
+    </linearGradient>
+  </defs>
+  <rect width="600" height="600" fill="url(#g)"/>
+  <g fill="none" stroke="#e0f2fe" stroke-width="10" stroke-linecap="round" opacity="0.9" transform="translate(170,120)">
+    <!-- generic instrument silhouette -->
+    <path d="M0 140 C 90 40, 170 40, 260 140" />
+    <path d="M20 60 C 60 30, 100 30, 140 60" />
+    <path d="M120 145 C 150 205, 160 250, 150 300" opacity="0.6"/>
+  </g>
+  <text x="300" y="470" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="600" fill="#f0fdfa">GOLDMAN-FOX Operating Scissors – TC Edge</text>
+  <text x="300" y="515" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="20" fill="#cffafe" opacity="0.8">Scissors</text>
+</svg>

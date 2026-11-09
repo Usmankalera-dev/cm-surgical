@@ -1,0 +1,50 @@
+{% extends "admin/base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<h1 class="admin-title">Dashboard</h1>
+<div class="stat-grid">
+  <div class="stat-card"><strong>{{ stats.products }}</strong><span>Products</span></div>
+  <div class="stat-card"><strong>{{ stats.orders }}</strong><span>Orders</span></div>
+  <div class="stat-card"><strong>{{ stats.reviews }}</strong><span>Reviews</span></div>
+  <div class="stat-card"><strong>{{ stats.messages }}</strong><span>Messages</span></div>
+  <div class="stat-card"><strong>{{ stats.coupons }}</strong><span>Active coupons</span></div>
+  <div class="stat-card"><strong>{{ stats.ads }}</strong><span>Ad slots</span></div>
+</div>
+
+<div class="admin-two">
+  <div class="card">
+    <h3>Latest Orders</h3>
+    {% if latest_orders %}
+    <table class="tbl">
+      <tr><th>#</th><th>Customer</th><th>City</th><th>Total</th><th>Date</th></tr>
+      {% for o in latest_orders %}
+      <tr>
+        <td>{{ o.id }}</td>
+        <td>{{ o.name }}<br><span class="muted small">{{ o.phone }}</span></td>
+        <td>{{ o.city }}</td>
+        <td>₨ {{ "{:,}".format(o.total) }}</td>
+        <td class="muted small">{{ o.created_at }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+    <a class="btn btn-ghost btn-small" href="/admin/orders">View all →</a>
+    {% else %}<p class="muted">No orders yet.</p>{% endif %}
+  </div>
+  <div class="card">
+    <h3>Latest Messages</h3>
+    {% if latest_messages %}
+    <table class="tbl">
+      <tr><th>Name</th><th>Subject</th><th>Date</th></tr>
+      {% for m in latest_messages %}
+      <tr>
+        <td>{{ m.name }}</td>
+        <td>{{ m.subject }}</td>
+        <td class="muted small">{{ m.created_at }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+    <a class="btn btn-ghost btn-small" href="/admin/messages">View all →</a>
+    {% else %}<p class="muted">No messages yet.</p>{% endif %}
+  </div>
+</div>
+{% endblock %}
