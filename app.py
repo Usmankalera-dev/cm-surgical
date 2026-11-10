@@ -3,7 +3,6 @@ import json
 import os
 import random
 import secrets
-import sqlite3
 import string
 from datetime import datetime, timedelta, timezone
 from functools import wraps
@@ -22,7 +21,7 @@ from flask import (
 from werkzeug.utils import secure_filename
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from db import get_conn, init_db
+from db import LIKE_OP, get_conn, init_db, sql_interval_ago, sql_now, ts_param
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "change-me-in-production")
@@ -73,7 +72,9 @@ def rating_map(product_ids):
     out = {}
     for r in rows:
         out[r["product_id"]] = {
-            "rating": round(r["avg_rating"], 1) if r["avg_rating"] else None,
+            # AVG() returns Decimal on Postgres and float on SQLite;
+            # normalise to float so jsonify can serialise it.
+            "rating": float(round(r["avg_rating"], 1)) if r["avg_rating"] else None,
             "count": r["n"],
         }
     return out
@@ -137,6 +138,16 @@ def get_ads(position=None):
 # ---------------- Coupons ----------------
 
 
+def _as_utc(value):
+    """Stored timestamps are text in SQLite and datetime in Postgres;
+    normalise both to an aware UTC datetime for comparison."""
+    if value is None:
+        return None
+    if isinstance(value, datetime):
+        return value if value.tzinfo is not None else value.replace(tzinfo=timezone.utc)
+    return datetime.strptime(value, "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
+
+
 def evaluate_coupon(code, subtotal):
     """Return (coupon_row | None, discount, error_message)."""
     code = (code or "").strip().upper()
@@ -147,9 +158,10 @@ def evaluate_coupon(code, subtotal):
     conn.close()
     if row is None or not row["active"]:
         return None, 0, "This discount code is not valid."
-    if row["expires_at"] and row["expires_at"] < datetime.now().strftime("%Y-%m-%d %H:%M:%S"):
+    now = datetime.now(timezone.utc)
+    if row["expires_at"] and _as_utc(row["expires_at"]) < now:
         return None, 0, "This discount code has expired."
-    if row["starts_at"] and row["starts_at"] > datetime.now().strftime("%Y-%m-%d %H:%M:%S"):
+    if row["starts_at"] and _as_utc(row["starts_at"]) > now:
         return None, 0, "This discount code is not active yet."
     if row["usage_limit"] and row["used_count"] >= row["usage_limit"]:
         return None, 0, "This discount code has reached its usage limit."
@@ -185,8 +197,8 @@ def get_setting(key):
 def set_setting(key, value):
     conn = get_conn()
     conn.execute(
-        "INSERT INTO admin_settings (key, value, updated_at) VALUES (?, ?, datetime('now')) "
-        "ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = datetime('now')",
+        f"INSERT INTO admin_settings (key, value, updated_at) VALUES (?, ?, {sql_now()}) "
+        f"ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = {sql_now()}",
         (key, value),
     )
     conn.commit()
@@ -209,24 +221,23 @@ def issue_login_code():
     """Create a one-time code. Returns (code, expires_at) or (None, error)."""
     conn = get_conn()
     recent = conn.execute(
-        "SELECT COUNT(*) FROM login_codes WHERE created_at > datetime('now', '-1 hour')"
+        f"SELECT COUNT(*) FROM login_codes WHERE created_at > {sql_interval_ago(hours=1)}"
     ).fetchone()[0]
     if recent >= LOGIN_CODE_MAX_PER_HOUR:
         conn.close()
         return None, "Too many codes requested. Please try again later."
-    conn.execute("DELETE FROM login_codes WHERE used = 1 OR expires_at < datetime('now')")
+    conn.execute(f"DELETE FROM login_codes WHERE used = 1 OR expires_at < {sql_now()}")
     code = "".join(secrets.choice(string.digits) for _ in range(6))
-    # stored in UTC to match SQLite's datetime('now'), which is what the check below compares against
-    expires = (datetime.now(timezone.utc) + timedelta(minutes=LOGIN_CODE_TTL_MINUTES)).strftime(
-        "%Y-%m-%d %H:%M:%S"
-    )
+    # Stored as UTC on both backends (TIMESTAMPTZ in Postgres, UTC text in
+    # SQLite), which is what the expiry check below compares against.
+    expires = datetime.now(timezone.utc) + timedelta(minutes=LOGIN_CODE_TTL_MINUTES)
     conn.execute(
         "INSERT INTO login_codes (code_hash, expires_at) VALUES (?, ?)",
-        (hash_login_code(code), expires),
+        (hash_login_code(code), ts_param(expires)),
     )
     conn.commit()
     conn.close()
-    return code, expires
+    return code, expires.strftime("%Y-%m-%d %H:%M:%S")
 
 
 def deliver_login_code(code, expires):
@@ -249,7 +260,7 @@ def consume_login_code(code):
         return False
     conn = get_conn()
     row = conn.execute(
-        "SELECT * FROM login_codes WHERE code_hash = ? AND used = 0 AND expires_at > datetime('now')",
+        f"SELECT * FROM login_codes WHERE code_hash = ? AND used = 0 AND expires_at > {sql_now()}",
         (hash_login_code(code),),
     ).fetchone()
     if row is None:
@@ -984,7 +995,7 @@ def api_products():
         query += " AND p.price_min <= ?"
         params.append(max_price)
     if search:
-        query += " AND (p.name LIKE ? OR p.description LIKE ? OR p.sku LIKE ?)"
+        query += f" AND (p.name {LIKE_OP} ? OR p.description {LIKE_OP} ? OR p.sku {LIKE_OP} ?)"
         like = f"%{search}%"
         params.extend([like, like, like])
 
@@ -1019,10 +1030,10 @@ def api_search_suggest():
     like = f"%{q}%"
     conn = get_conn()
     rows = conn.execute(
-        """SELECT p.id, p.sku, p.name, p.image, p.price_min, p.price_max, p.stock, c.name AS cat_name
+        f"""SELECT p.id, p.sku, p.name, p.image, p.price_min, p.price_max, p.stock, c.name AS cat_name
            FROM products p JOIN categories c ON c.id = p.category_id
-           WHERE p.name LIKE ? OR p.sku LIKE ?
-           ORDER BY (p.name LIKE ?) DESC, p.name LIMIT 8""",
+           WHERE p.name {LIKE_OP} ? OR p.sku {LIKE_OP} ?
+           ORDER BY (p.name {LIKE_OP} ?) DESC, p.name LIMIT 8""",
         (like, like, f"{q}%"),
     ).fetchall()
     conn.close()
@@ -1090,8 +1101,8 @@ def api_product_reviews(product_id):
 
     conn = get_conn()
     recent = conn.execute(
-        """SELECT id FROM reviews WHERE product_id = ? AND LOWER(author) = LOWER(?)
-           AND created_at > datetime('now', '-1 day')""",
+        f"""SELECT id FROM reviews WHERE product_id = ? AND LOWER(author) = LOWER(?)
+           AND created_at > {sql_interval_ago(days=1)}""",
         (product_id, author),
     ).fetchone()
     if recent is not None:
