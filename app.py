@@ -346,6 +346,14 @@ def product_detail(product_id):
     )
 
 
+@app.route("/google7b22381c999ae4f9.html")
+def google_verification():
+    return Response(
+        "google-site-verification: google7b22381c999ae4f9.html",
+        mimetype="text/html",
+    )
+
+
 @app.route("/robots.txt")
 def robots_txt():
     return Response(
