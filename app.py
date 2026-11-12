@@ -393,9 +393,9 @@ def sitemap_xml():
         add(base + path, priority, changefreq)
 
     conn = get_conn()
-    for row in conn.execute("SELECT slug FROM categories ORDER BY name"):
+    for row in conn.execute("SELECT slug FROM categories ORDER BY name").fetchall():
         add(f"{base}/shop?category={row['slug']}", "0.8", "weekly")
-    for row in conn.execute("SELECT id FROM products ORDER BY id"):
+    for row in conn.execute("SELECT id FROM products ORDER BY id").fetchall():
         add(f"{base}/product/{row['id']}", "0.8", "weekly")
     conn.close()
 
