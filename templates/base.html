@@ -4,6 +4,44 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}CM SURGICAL{% endblock %}</title>
+  <meta name="description" content="{% block meta_description %}CM SURGICAL (Pvt.) Ltd. manufactures and exports premium surgical instruments in Lahore, Pakistan since 2014 — forceps, scissors, needle holders, ENT instruments and more. Cash on Delivery across Pakistan.{% endblock %}">
+  <meta name="keywords" content="surgical instruments Pakistan, surgical instruments Lahore, surgical instruments manufacturer, forceps, scissors, needle holders, ENT instruments, surgical instruments exporter, CM Surgical">
+  <meta name="author" content="CM SURGICAL (Pvt.) Ltd.">
+  <meta name="robots" content="{% block meta_robots %}index, follow{% endblock %}">
+  <link rel="canonical" href="{{ request.url }}">
+  <meta property="og:site_name" content="CM SURGICAL">
+  <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+  <meta property="og:title" content="{{ self.title() }}">
+  <meta property="og:description" content="{{ self.meta_description() }}">
+  <meta property="og:url" content="{{ request.url }}">
+  <meta property="og:image" content="{% block og_image %}{{ request.url_root }}static/img/cmd-logo.png{% endblock %}">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ self.title() }}">
+  <meta name="twitter:description" content="{{ self.meta_description() }}">
+  <meta name="twitter:image" content="{{ self.og_image() }}">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "name": "CM SURGICAL (Pvt.) Ltd.",
+    "description": "Manufacturers and exporters of premium surgical instruments in Lahore, Pakistan since 2014.",
+    "url": "https://thecmsurgical.com/",
+    "telephone": "+92-340-2719595",
+    "email": "cmsurgical512@gmail.com",
+    "foundingDate": "2014",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "271 Model Town",
+      "addressLocality": "Lahore",
+      "postalCode": "51310",
+      "addressCountry": "PK"
+    },
+    "priceRange": "PKR 300 - PKR 50000",
+    "paymentAccepted": "Cash on Delivery",
+    "currenciesAccepted": "PKR"
+  }
+  </script>
+  {% block json_ld %}{% endblock %}
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">

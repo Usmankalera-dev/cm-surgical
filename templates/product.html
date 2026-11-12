@@ -1,6 +1,49 @@
 {% extends "base.html" %}
 {% from "_macros.html" import stars, rating_line, card %}
 {% block title %}{{ product.name }} — CM SURGICAL{% endblock %}
+{% block meta_description %}{{ product.name }} — {{ product.category }} surgical instrument by CM SURGICAL, Lahore. Price ₨ {{ product.price_min_str }}{% if product.price_min != product.price_max %} – ₨ {{ product.price_max_str }}{% endif %} (excl. GST). Export quality, Cash on Delivery across Pakistan.{% endblock %}
+{% block og_type %}product{% endblock %}
+{% block og_image %}{{ request.url_root }}{{ product.image.lstrip('/') }}{% endblock %}
+{% block json_ld %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": {{ product.name|tojson }},
+  "image": {{ (request.url_root ~ product.image.lstrip('/'))|tojson }},
+  "description": {{ product.description|tojson }},
+  "sku": {{ product.sku|tojson }},
+  "brand": {"@type": "Brand", "name": "CM SURGICAL"},
+  "category": {{ product.category|tojson }},
+  "offers": {
+    "@type": "Offer",
+    "url": {{ request.url|tojson }},
+    "priceCurrency": "PKR",
+    "price": {{ product.price_min }},
+    "availability": "{% if product.stock > 0 %}https://schema.org/InStock{% else %}https://schema.org/OutOfStock{% endif %}",
+    "itemCondition": "https://schema.org/NewCondition",
+    "seller": {"@type": "Organization", "name": "CM SURGICAL (Pvt.) Ltd."}
+  }{% if product.review_count > 0 %},
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": {{ product.rating }},
+    "reviewCount": {{ product.review_count }}
+  }{% endif %}
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type": "ListItem", "position": 1, "name": "Home", "item": {{ (request.url_root)|tojson }}},
+    {"@type": "ListItem", "position": 2, "name": "Products", "item": {{ (request.url_root ~ 'shop')|tojson }}},
+    {"@type": "ListItem", "position": 3, "name": {{ product.category|tojson }}, "item": {{ (request.url_root ~ 'shop?category=' ~ product.category_slug)|tojson }}},
+    {"@type": "ListItem", "position": 4, "name": {{ product.name|tojson }}}
+  ]
+}
+</script>
+{% endblock %}
 
 {% block content %}
 <section class="section">

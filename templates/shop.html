@@ -1,11 +1,14 @@
 {% extends "base.html" %}
-{% block title %}Products — CM SURGICAL{% endblock %}
+{% set ns = namespace(cat_name='') %}
+{% for c in categories %}{% if c.slug == request.args.get('category','') %}{% set ns.cat_name = c.name %}{% endif %}{% endfor %}
+{% block title %}{% if ns.cat_name %}{{ ns.cat_name }} Surgical Instruments — Buy Online in Pakistan | CM SURGICAL{% else %}Shop Surgical Instruments Online in Pakistan — CM SURGICAL{% endif %}{% endblock %}
+{% block meta_description %}{% if ns.cat_name %}Buy {{ ns.cat_name }} surgical instruments online in Pakistan — export quality, Cash on Delivery. CM SURGICAL, Lahore since 2014.{% else %}Browse the full range of surgical instruments — forceps, scissors, scalpels, ENT, diagnostics and more. Export quality, Cash on Delivery across Pakistan.{% endif %}{% endblock %}
 
 {% block content %}
 <section class="page-head">
   <div class="container">
-    <h1>Products</h1>
-    <p>Browse our full range of surgical instruments</p>
+    <h1>{{ ns.cat_name or 'Products' }}</h1>
+    <p>{% if ns.cat_name %}Browse our {{ ns.cat_name }} surgical instruments{% else %}Browse our full range of surgical instruments{% endif %}</p>
   </div>
 </section>
 

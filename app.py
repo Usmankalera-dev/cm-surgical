@@ -9,6 +9,7 @@ from functools import wraps
 
 from flask import (
     Flask,
+    Response,
     abort,
     flash,
     jsonify,
@@ -343,6 +344,63 @@ def product_detail(product_id):
         breakdown=breakdown,
         related=attach_ratings([row_to_product(r) for r in related]),
     )
+
+
+@app.route("/robots.txt")
+def robots_txt():
+    return Response(
+        "User-agent: *\n"
+        "Allow: /\n"
+        "Disallow: /admin\n"
+        "Disallow: /cart\n"
+        "Disallow: /checkout\n"
+        "Disallow: /orders\n"
+        "Disallow: /order-confirmed/\n"
+        "Disallow: /track\n"
+        "Disallow: /wishlist\n"
+        "Disallow: /api/\n"
+        "Sitemap: https://thecmsurgical.com/sitemap.xml\n",
+        mimetype="text/plain",
+    )
+
+
+@app.route("/sitemap.xml")
+def sitemap_xml():
+    import xml.etree.ElementTree as ET
+    from datetime import date
+
+    base = "https://thecmsurgical.com"
+    today = date.today().isoformat()
+    urlset = ET.Element(
+        "urlset", {"xmlns": "http://www.sitemaps.org/schemas/sitemap/0.9"}
+    )
+
+    def add(loc, priority, changefreq):
+        url = ET.SubElement(urlset, "url")
+        ET.SubElement(url, "loc").text = loc
+        ET.SubElement(url, "lastmod").text = today
+        ET.SubElement(url, "changefreq").text = changefreq
+        ET.SubElement(url, "priority").text = priority
+
+    for path, priority, changefreq in [
+        ("/", "1.0", "weekly"),
+        ("/shop", "0.9", "weekly"),
+        ("/about", "0.7", "monthly"),
+        ("/quality", "0.7", "monthly"),
+        ("/contact", "0.7", "monthly"),
+        ("/blog", "0.7", "weekly"),
+    ]:
+        add(base + path, priority, changefreq)
+
+    conn = get_conn()
+    for row in conn.execute("SELECT slug FROM categories ORDER BY name"):
+        add(f"{base}/shop?category={row['slug']}", "0.8", "weekly")
+    for row in conn.execute("SELECT id FROM products ORDER BY id"):
+        add(f"{base}/product/{row['id']}", "0.8", "weekly")
+    conn.close()
+
+    xml = ET.tostring(urlset, encoding="utf-8", xml_declaration=True)
+    return Response(xml, mimetype="application/xml")
 
 
 @app.route("/cart")
