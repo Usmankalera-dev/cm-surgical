@@ -92,6 +92,10 @@
           <button class="btn btn-buy btn-lg" id="buyNowBtn" {% if product.stock == 0 %}disabled{% endif %} {% if product.stock == 0 %}style="display:none"{% endif %}>
             ⚡ Buy Now
           </button>
+          {% set wa_msg = "Hello CM SURGICAL, I want to order:\n\n• " ~ product.name ~ " (SKU: " ~ product.sku ~ ")\n• Quantity: 1\n• Price: ₨ " ~ product.price_min_str ~ " (excl. GST)\n• Product link: " ~ request.url ~ "\n\nPlease confirm availability and delivery. Thank you!" %}
+          <a class="btn btn-whatsapp btn-lg" id="waOrderBtn" href="https://wa.me/923402719595?text={{ wa_msg|urlencode }}" target="_blank" rel="noopener" {% if product.stock == 0 %}style="display:none"{% endif %}>
+            💬 Order on WhatsApp
+          </a>
           <button class="btn btn-ghost btn-lg" data-wish="{{ product.id }}" id="wishBtn">♥ Save</button>
           <a class="btn btn-ghost btn-lg" href="/cart">View Cart</a>
         </div>

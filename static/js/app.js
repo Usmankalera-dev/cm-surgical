@@ -339,11 +339,25 @@
     const qty = document.getElementById("qty");
     const max = parseInt(qty.dataset.max || "99", 10);
     const getQty = () => Math.max(1, Math.min(max, parseInt(qty.value || "1", 10)));
+    const waBtn = document.getElementById("waOrderBtn");
+    const updateWaLink = () => {
+      if (!waBtn) return;
+      const p = window.__PRODUCT__;
+      const msg =
+        "Hello CM SURGICAL, I want to order:\n\n• " +
+        p.name + " (SKU: " + p.sku + ")\n• Quantity: " + getQty() +
+        "\n• Price: ₨ " + (p.price_min_str || p.price_min) + " (excl. GST)\n• Product link: " +
+        window.location.href + "\n\nPlease confirm availability and delivery. Thank you!";
+      waBtn.href = "https://wa.me/923402719595?text=" + encodeURIComponent(msg);
+    };
     document.querySelectorAll(".qty-input button").forEach((b) =>
       b.addEventListener("click", () => {
         qty.value = Math.max(1, Math.min(max, getQty() + parseInt(b.dataset.step, 10)));
+        updateWaLink();
       })
     );
+    qty.addEventListener("input", updateWaLink);
+    updateWaLink();
     btn.addEventListener("click", () => {
       addToCart(window.__PRODUCT__, getQty());
       flashMessage("Added to cart ✓");

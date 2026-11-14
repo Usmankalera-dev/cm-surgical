@@ -126,6 +126,8 @@ img { max-width: 100%; display: block; }
 .btn-primary:hover { background: var(--teal-800); }
 .btn-buy { background: #15803d; color: white; }
 .btn-buy:hover { background: #166534; }
+.btn-whatsapp { background: #25d366; color: white; }
+.btn-whatsapp:hover { background: #1da851; }
 .btn-ghost { border-color: var(--teal-700); color: var(--teal-700); background: transparent; }
 .btn-ghost:hover { background: var(--teal-700); color: white; }
 .btn-small { padding: 7px 14px; font-size: 0.85rem; }
