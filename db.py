@@ -4,7 +4,13 @@ Two backends, one API:
 
 * Postgres (Neon) when the DATABASE_URL environment variable is set.
   Connection is opened with psycopg2; DATABASE_URL must include
-  sslmode=require (Neon requires TLS).
+  sslmode=require (Neon requires TLS). Postgres connections are served
+  from a small per-process pool (see _get_pg_pool): the app opens a fresh
+  connection for almost every query, and a cross-region TLS + Postgres
+  auth handshake per connection cost ~0.7s each — the homepage opened
+  seven of them (~4.5s TTFB). Pooled connections are validated on
+  checkout (Neon may close idle ones) and rolled back on return so no
+  transaction snapshot leaks into the next request.
 * Otherwise the local SQLite file store.db, exactly as before, so local
   development still works with no database at all.
 
@@ -22,6 +28,7 @@ to TIME ZONE 'UTC' on connect so the two stay comparable.
 
 import os
 import sqlite3
+import threading
 from datetime import datetime
 
 try:
@@ -31,6 +38,14 @@ try:
 except ImportError:  # pragma: no cover - psycopg2 is a runtime dependency
     psycopg2 = None
     _HAVE_PSYCOPG2 = False
+
+try:
+    from psycopg2 import pool as _pg_pool
+
+    _HAVE_PG_POOL = True
+except ImportError:  # pragma: no cover
+    _pg_pool = None
+    _HAVE_PG_POOL = False
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "store.db")
@@ -99,11 +114,16 @@ class _PgCursor:
 
 
 class _Conn:
-    """Uniform connection wrapper around sqlite3 / psycopg2 connections."""
+    """Uniform connection wrapper around sqlite3 / psycopg2 connections.
 
-    def __init__(self, raw, is_pg):
+    When _pooled is set (a psycopg2 pool), close() returns the connection
+    to the pool instead of closing it, after rolling back any open
+    transaction so the next checkout starts clean."""
+
+    def __init__(self, raw, is_pg, _pooled=None):
         self._raw = raw
         self._pg = is_pg
+        self._pooled = _pooled
 
     def execute(self, sql, params=()):
         if self._pg:
@@ -141,7 +161,65 @@ class _Conn:
         self._raw.rollback()
 
     def close(self):
+        if self._pooled is not None:
+            pool = self._pooled
+            self._pooled = None
+            try:
+                # End any open (read-only) transaction so its snapshot
+                # cannot leak into the next request on this connection.
+                self._raw.rollback()
+            except Exception:
+                pass
+            try:
+                pool.putconn(self._raw)
+            except Exception:
+                try:
+                    self._raw.close()
+                except Exception:
+                    pass
+            return
         self._raw.close()
+
+
+# Lazily created per-process pool of Postgres connections. Two gunicorn
+# workers each keep their own pool (max 5), so at most 10 connections
+# reach Neon — well within its limits. _PG_POOL is False when pool
+# creation has already failed once; callers then fall back to a fresh
+# direct connection per request (the old behaviour).
+_PG_POOL = None
+_PG_POOL_LOCK = threading.Lock()
+
+
+def _get_pg_pool():
+    global _PG_POOL
+    if _PG_POOL is not None:
+        return _PG_POOL or None
+    if not _HAVE_PG_POOL:
+        return None
+    with _PG_POOL_LOCK:
+        if _PG_POOL is not None:
+            return _PG_POOL or None
+        try:
+            _PG_POOL = _pg_pool.ThreadedConnectionPool(
+                1, 5, DATABASE_URL, connect_timeout=15
+            )
+        except Exception:
+            _PG_POOL = False
+        return _PG_POOL or None
+
+
+def _new_pg_raw():
+    """A brand-new Postgres connection, timezone set to UTC (same as the
+    old get_conn() behaviour). Used when the pool is unavailable or a
+    pooled connection turns out to be dead."""
+    raw = psycopg2.connect(DATABASE_URL, connect_timeout=15)
+    # Timestamps are stored in UTC on both backends; keep the session
+    # in UTC so timestamp strings parse the same way they do in SQLite.
+    cur = raw.cursor()
+    cur.execute("SET TIME ZONE 'UTC'")
+    raw.commit()
+    cur.close()
+    return raw
 
 
 def get_conn():
@@ -150,17 +228,33 @@ def get_conn():
     Postgres (Neon) when DATABASE_URL is set, otherwise the local SQLite
     file. The returned object supports the sqlite3-style API the app uses:
     .execute(sql, params), .cursor(), .executescript(sql), .commit(),
-    .rollback() and .close().
+    .rollback() and .close(). For Postgres the connection comes from the
+    pool when possible; .close() returns it there.
     """
     if USE_POSTGRES:
-        raw = psycopg2.connect(DATABASE_URL, connect_timeout=15)
-        # Timestamps are stored in UTC on both backends; keep the session
-        # in UTC so timestamp strings parse the same way they do in SQLite.
-        cur = raw.cursor()
-        cur.execute("SET TIME ZONE 'UTC'")
-        raw.commit()
-        cur.close()
-        return _Conn(raw, is_pg=True)
+        pool = _get_pg_pool()
+        if pool is not None:
+            try:
+                raw = pool.getconn()
+            except Exception:
+                raw = None
+            if raw is not None:
+                try:
+                    # Validate: Neon may have closed an idle pooled
+                    # connection (compute suspend / idle timeout).
+                    cur = raw.cursor()
+                    cur.execute("SELECT 1")
+                    cur.fetchone()
+                    cur.execute("SET TIME ZONE 'UTC'")
+                    raw.commit()
+                    cur.close()
+                    return _Conn(raw, is_pg=True, _pooled=pool)
+                except Exception:
+                    try:
+                        pool.putconn(raw, close=True)
+                    except Exception:
+                        pass
+        return _Conn(_new_pg_raw(), is_pg=True)
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
