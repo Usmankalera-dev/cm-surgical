@@ -124,6 +124,10 @@ class _Conn:
         self._raw = raw
         self._pg = is_pg
         self._pooled = _pooled
+        # True while this connection is the request-scoped one (see
+        # get_conn): close() is then a no-op and the teardown handler
+        # returns it to the pool at the end of the request.
+        self._shared = False
 
     def execute(self, sql, params=()):
         if self._pg:
@@ -161,6 +165,10 @@ class _Conn:
         self._raw.rollback()
 
     def close(self):
+        if self._shared:
+            # Request-scoped connection: the teardown handler returns it
+            # to the pool at the end of the request.
+            return
         if self._pooled is not None:
             pool = self._pooled
             self._pooled = None
@@ -222,14 +230,12 @@ def _new_pg_raw():
     return raw
 
 
-def get_conn():
-    """Open a database connection.
+def _new_conn():
+    """Create a fresh _Conn (pooled Postgres or SQLite).
 
-    Postgres (Neon) when DATABASE_URL is set, otherwise the local SQLite
-    file. The returned object supports the sqlite3-style API the app uses:
-    .execute(sql, params), .cursor(), .executescript(sql), .commit(),
-    .rollback() and .close(). For Postgres the connection comes from the
-    pool when possible; .close() returns it there.
+    For Postgres the connection comes from the pool when possible;
+    .close() returns it there. This is the per-call behaviour; get_conn()
+    wraps it with request-scoped sharing (below).
     """
     if USE_POSTGRES:
         pool = _get_pg_pool()
@@ -259,6 +265,56 @@ def get_conn():
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
     return _Conn(conn, is_pg=False)
+
+
+def get_conn():
+    """Open a database connection.
+
+    The returned object supports the sqlite3-style API the app uses:
+    .execute(sql, params), .cursor(), .executescript(sql), .commit(),
+    .rollback() and .close().
+
+    Inside a Flask request, Postgres callers share ONE connection for the
+    whole request (kept on flask.g): a page that queries in several places
+    used to pay a fresh cross-region connection per query. The shared
+    connection is returned to the pool by close_request_conn(), wired to
+    the app's teardown handler. Outside a request (startup scripts,
+    seed/migrate) every call still gets its own connection, as before.
+    SQLite callers always get their own connection (a local file open is
+    cheap).
+    """
+    if USE_POSTGRES:
+        try:
+            from flask import g, has_app_context
+        except ImportError:
+            return _new_conn()
+        if has_app_context():
+            conn = getattr(g, "_cm_db_conn", None)
+            if conn is None:
+                conn = _new_conn()
+                conn._shared = True
+                g._cm_db_conn = conn
+            return conn
+    return _new_conn()
+
+
+def close_request_conn():
+    """Return the request-scoped connection (if any) to the pool.
+
+    Called from the Flask teardown handler at the end of every request.
+    No-op outside a request context or when no connection was opened.
+    """
+    try:
+        from flask import g, has_app_context
+    except ImportError:
+        return
+    if not has_app_context():
+        return
+    conn = getattr(g, "_cm_db_conn", None)
+    if conn is not None:
+        g._cm_db_conn = None
+        conn._shared = False
+        conn.close()
 
 
 def sql_now():

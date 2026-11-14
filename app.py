@@ -4,6 +4,7 @@ import os
 import random
 import secrets
 import string
+import time
 from datetime import datetime, timedelta, timezone
 from functools import wraps
 
@@ -22,9 +23,15 @@ from flask import (
 from werkzeug.utils import secure_filename
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from db import LIKE_OP, get_conn, init_db, sql_interval_ago, sql_now, ts_param
+from db import LIKE_OP, close_request_conn, get_conn, init_db, sql_interval_ago, sql_now, ts_param
 
 app = Flask(__name__)
+
+
+@app.teardown_appcontext
+def _close_request_db_connection(exc):
+    # Return the request-scoped Postgres connection to the pool.
+    close_request_conn()
 app.secret_key = os.environ.get("SECRET_KEY", "change-me-in-production")
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin123")
 ADMIN_LOGIN_EMAIL = os.environ.get("ADMIN_LOGIN_EMAIL", "admin@cmsurgical.pk")
@@ -102,10 +109,24 @@ def get_product_row(product_id):
     return row
 
 
+# Categories and ads change only via the admin panel / seed, but
+# get_categories() runs on EVERY page (context processor) and get_ads()
+# twice on the homepage. A short in-process cache (60s) keeps those
+# lookups off the database; an admin change shows up within a minute.
+_CACHE_TTL_SECONDS = 60
+_categories_cache = {"at": 0.0, "rows": None}
+_ads_cache = {}  # position ("" = all) -> {"at": float, "rows": list}
+
+
 def get_categories():
+    now = time.time()
+    cached = _categories_cache["rows"]
+    if cached is not None and now - _categories_cache["at"] < _CACHE_TTL_SECONDS:
+        return [dict(r) for r in cached]
     conn = get_conn()
-    rows = conn.execute("SELECT * FROM categories ORDER BY name").fetchall()
+    rows = [dict(r) for r in conn.execute("SELECT * FROM categories ORDER BY name").fetchall()]
     conn.close()
+    _categories_cache.update({"at": now, "rows": rows})
     return [dict(r) for r in rows]
 
 
@@ -125,6 +146,11 @@ def inject_categories():
 
 
 def get_ads(position=None):
+    key = position or ""
+    now = time.time()
+    cached = _ads_cache.get(key)
+    if cached is not None and now - cached["at"] < _CACHE_TTL_SECONDS:
+        return [dict(r) for r in cached["rows"]]
     conn = get_conn()
     if position:
         rows = conn.execute(
@@ -133,6 +159,8 @@ def get_ads(position=None):
     else:
         rows = conn.execute("SELECT * FROM ads WHERE active = 1 ORDER BY id").fetchall()
     conn.close()
+    rows = [dict(r) for r in rows]
+    _ads_cache[key] = {"at": now, "rows": rows}
     return [dict(r) for r in rows]
 
 
